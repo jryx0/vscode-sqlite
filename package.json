@@ -3,20 +3,23 @@
     "icon": "resources/icon/icon_128x128.png",
     "displayName": "SQLite",
     "description": "Explore and query SQLite databases.",
-    "version": "0.3.0",
+    "version": "0.9.0",
     "publisher": "alexcvzz",
     "repository": {
         "url": "https://github.com/AlexCovizzi/vscode-sqlite",
         "type": "git"
     },
     "engines": {
-        "vscode": "^1.23.0"
+        "vscode": "^1.30.0"
     },
     "categories": [
         "Other"
     ],
     "activationEvents": [
         "onLanguage:sql",
+        "onLanguage:sqlite",
+        "onLanguage:db",
+        "onCommand:sqlite.showOutputChannel",
         "onCommand:sqlite.explorer.add",
         "onCommand:sqlite.explorer.remove",
         "onCommand:sqlite.newQuery",
@@ -24,17 +27,46 @@
         "onCommand:sqlite.useDatabase",
         "onCommand:sqlite.runDocumentQuery"
     ],
-    "main": "./out/extension",
+    "main": "./dist/extension",
     "contributes": {
         "commands": [
             {
+                "command": "sqlite.showOutputChannel",
+                "title": "Show output",
+                "category": "SQLite"
+            },
+            {
                 "command": "sqlite.explorer.add",
-                "title": "Open Database in Explorer",
+                "title": "Open Database",
                 "category": "SQLite"
             },
             {
                 "command": "sqlite.explorer.remove",
-                "title": "Close Explorer Database",
+                "title": "Close Database",
+                "category": "SQLite"
+            },
+            {
+                "command": "sqlite.explorer.refresh",
+                "title": "Refresh Databases",
+                "category": "SQLite",
+                "icon": {
+                    "light": "resources/light/refresh.svg",
+                    "dark": "resources/dark/refresh.svg"
+                }
+            },
+            {
+                "command": "sqlite.explorer.copyName",
+                "title": "Copy Name",
+                "category": "SQLite"
+            },
+            {
+                "command": "sqlite.explorer.copyPath",
+                "title": "Copy Path",
+                "category": "SQLite"
+            },
+            {
+                "command": "sqlite.explorer.copyRelativePath",
+                "title": "Copy Relative Path",
                 "category": "SQLite"
             },
             {
@@ -52,6 +84,20 @@
                 }
             },
             {
+                "command": "sqlite.newQuerySelect",
+                "title": "New Query [Select]",
+                "category": "SQLite",
+                "icon": {
+                    "light": "resources/light/newquery.svg",
+                    "dark": "resources/dark/newquery.svg"
+                }
+            },
+            {
+                "command": "sqlite.newQueryInsert",
+                "title": "New Query [Insert]",
+                "category": "SQLite"
+            },
+            {
                 "command": "sqlite.quickQuery",
                 "title": "Quick Query",
                 "category": "SQLite"
@@ -62,22 +108,26 @@
                 "category": "SQLite"
             },
             {
+                "command": "sqlite.runSelectedQuery",
+                "title": "Run Selected Query",
+                "category": "SQLite"
+            },
+            {
                 "command": "sqlite.runTableQuery",
                 "title": "Show Table",
-                "category": "SQLite"
+                "category": "SQLite",
+                "icon": {
+                    "light": "resources/light/runquery.svg",
+                    "dark": "resources/dark/runquery.svg"
+                }
             },
             {
                 "command": "sqlite.runSqliteMasterQuery",
                 "title": "Show sqlite_master",
-                "category": "SQLite"
-            },
-            {
-                "command": "sqlite.explorer.refresh",
-                "title": "Refresh",
                 "category": "SQLite",
                 "icon": {
-                    "light": "resources/light/refresh.svg",
-                    "dark": "resources/dark/refresh.svg"
+                    "light": "resources/light/runquery.svg",
+                    "dark": "resources/dark/runquery.svg"
                 }
             }
         ],
@@ -86,7 +136,7 @@
                 "command": "sqlite.runDocumentQuery",
                 "key": "ctrl+shift+q",
                 "mac": "cmd+shift+q",
-                "when": "editorLangId == sql"
+                "when": "editorLangId =~ /(sql|sqlite)/"
             }
         ],
         "views": {
@@ -101,12 +151,22 @@
         "menus": {
             "commandPalette": [
                 {
+                    "command": "sqlite.showOutputChannel",
+                    "group": "sqlite"
+                },
+                {
                     "command": "sqlite.explorer.add",
                     "group": "sqlite"
                 },
                 {
                     "command": "sqlite.explorer.remove",
-                    "group": "sqlite"
+                    "group": "sqlite",
+                    "when": "sqlite.explorer.show"
+                },
+                {
+                    "command": "sqlite.explorer.refresh",
+                    "group": "sqlite",
+                    "when": "sqlite.explorer.show"
                 },
                 {
                     "command": "sqlite.newQuery",
@@ -118,12 +178,17 @@
                 },
                 {
                     "command": "sqlite.runDocumentQuery",
-                    "when": "editorLangId == sql",
+                    "when": "editorLangId =~ /(sql|sqlite)/",
+                    "group": "sqlite"
+                },
+                {
+                    "command": "sqlite.runSelectedQuery",
+                    "when": "editorLangId =~ /(sql|sqlite)/",
                     "group": "sqlite"
                 },
                 {
                     "command": "sqlite.useDatabase",
-                    "when": "editorLangId == sql",
+                    "when": "editorLangId =~ /(sql|sqlite)/",
                     "group": "sqlite"
                 },
                 {
@@ -135,27 +200,58 @@
                     "when": "false"
                 },
                 {
-                    "command": "sqlite.explorer.refresh",
+                    "command": "sqlite.explorer.copyName",
+                    "group": "sqlite",
+                    "when": "false"
+                },
+                {
+                    "command": "sqlite.explorer.copyPath",
+                    "group": "sqlite",
+                    "when": "false"
+                },
+                {
+                    "command": "sqlite.explorer.copyRelativePath",
+                    "group": "sqlite",
+                    "when": "false"
+                },
+                {
+                    "command": "sqlite.newQuerySelect",
+                    "group": "sqlite",
+                    "when": "false"
+                },
+                {
+                    "command": "sqlite.newQueryInsert",
+                    "group": "sqlite",
                     "when": "false"
                 }
             ],
             "explorer/context": [
                 {
-                    "when": "resourceLangId == sqlite",
                     "command": "sqlite.explorer.add",
-                    "group": "navigation"
+                    "when": "resourceLangId == db && !explorerResourceIsFolder",
+                    "group": "navigation@1"
+                },
+                {
+                    "command": "sqlite.newQuery",
+                    "when": "resourceLangId == db",
+                    "group": "0_sqlite@1"
                 }
             ],
             "editor/context": [
                 {
-                    "when": "editorTextFocus && editorLangId == sql",
+                    "when": "editorTextFocus && editorLangId =~ /(sql|sqlite)/",
                     "command": "sqlite.runDocumentQuery",
-                    "group": "sqlite@2"
+                    "group": "9.1_sqlite@1"
                 },
                 {
-                    "when": "editorTextFocus && editorLangId == sql",
+                    "when": "editorTextFocus && editorLangId =~ /(sql|sqlite)/",
+                    "command": "sqlite.runSelectedQuery",
+                    "group": "9.1_sqlite@2"
+                },
+                {
+                    "when": "editorTextFocus && editorLangId =~ /(sql|sqlite)/",
                     "command": "sqlite.useDatabase",
-                    "group": "sqlite@1"
+                    "group": "9.1_sqlite@3"
                 }
             ],
             "view/title": [
@@ -174,35 +270,99 @@
                 {
                     "command": "sqlite.newQuery",
                     "when": "view == sqlite.explorer && viewItem == sqlite.databaseItem",
-                    "group": "sqlite@1"
+                    "group": "inline@1"
                 },
                 {
                     "command": "sqlite.runSqliteMasterQuery",
                     "when": "view == sqlite.explorer && viewItem == sqlite.databaseItem",
-                    "group": "sqlite@2"
+                    "group": "1_query@1"
+                },
+                {
+                    "command": "sqlite.newQuery",
+                    "when": "view == sqlite.explorer && viewItem == sqlite.databaseItem",
+                    "group": "2_sql@1"
+                },
+                {
+                    "command": "sqlite.explorer.copyPath",
+                    "when": "view == sqlite.explorer && viewItem == sqlite.databaseItem",
+                    "group": "3_copy@1"
+                },
+                {
+                    "command": "sqlite.explorer.copyRelativePath",
+                    "when": "view == sqlite.explorer && viewItem == sqlite.databaseItem",
+                    "group": "3_copy@2"
                 },
                 {
                     "command": "sqlite.explorer.remove",
                     "when": "view == sqlite.explorer && viewItem == sqlite.databaseItem",
-                    "group": "sqlite@3"
+                    "group": "4_utils@1"
                 },
                 {
                     "command": "sqlite.runTableQuery",
-                    "when": "view == sqlite.explorer && viewItem == sqlite.tableItem"
+                    "when": "view == sqlite.explorer && viewItem == sqlite.tableItem",
+                    "group": "inline@1"
+                },
+                {
+                    "command": "sqlite.runTableQuery",
+                    "when": "view == sqlite.explorer && viewItem == sqlite.tableItem",
+                    "group": "1_query@1"
+                },
+                {
+                    "command": "sqlite.newQuerySelect",
+                    "when": "view == sqlite.explorer && viewItem == sqlite.tableItem",
+                    "group": "2_sql@1"
+                },
+                {
+                    "command": "sqlite.newQueryInsert",
+                    "when": "view == sqlite.explorer && viewItem == sqlite.tableItem",
+                    "group": "2_sql@2"
+                },
+                {
+                    "command": "sqlite.explorer.copyName",
+                    "when": "view == sqlite.explorer && viewItem == sqlite.tableItem",
+                    "group": "3_copy@1"
+                },
+                {
+                    "command": "sqlite.explorer.copyName",
+                    "when": "view == sqlite.explorer && viewItem == sqlite.columnItem",
+                    "group": "3_copy@1"
                 }
             ]
         },
         "languages": [
             {
                 "id": "sqlite",
+                "aliases": [
+                    "SQLite",
+                    "SQLite3"
+                ],
+                "firstLine": "\\s*--\\s*(sql|SQL)ite",
+                "extensions": [
+                    ".sql",
+                    ".sql3"
+                ],
+                "configuration": "./language-configuration.json"
+            },
+            {
+                "id": "db",
+                "aliases": [
+                    "Database"
+                ],
                 "extensions": [
                     ".db",
                     ".db3",
-                    ".sqlite",
-                    ".sqlite3",
                     ".sdb",
-                    ".s3db"
+                    ".s3db",
+                    ".sqlite",
+                    ".sqlite3"
                 ]
+            }
+        ],
+        "grammars": [
+            {
+                "language": "sqlite",
+                "scopeName": "source.sql.sqlite",
+                "path": "./syntaxes/sqlite.tmLanguage.json"
             }
         ],
         "configuration": {
@@ -223,38 +383,61 @@
                         "ERROR"
                     ],
                     "default": "INFO",
-                    "description": "Logging level in the output channel."
+                    "description": "Logging level in the output channel (DEBUG, INFO, WARN, ERROR)"
                 },
                 "sqlite.recordsPerPage": {
                     "type": "number",
                     "default": 50,
                     "minimum": -1,
                     "description": "Number of records to show per page. (-1 to show all records)"
+                },
+                "sqlite.databaseExtensions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": [
+                        "db",
+                        "db3",
+                        "sdb",
+                        "s3db",
+                        "sqlite",
+                        "sqlite3"
+                    ],
+                    "description": "The file extensions recognized as SQLite database."
                 }
             }
         }
     },
     "scripts": {
-        "vscode:prepublish": "npm run compile && npm run build-html",
-        "compile": "tsc -p ./",
-        "install-html": "cd ./src/resultview/htmlcontent && npm install",
-        "build-html": "cd ./src/resultview/htmlcontent && npm run build",
-        "watch": "tsc -watch -p ./",
-        "postinstall": "node ./node_modules/vscode/bin/install",
-        "test": "jest --config jest.json"
+        "vscode:prepublish": "webpack --mode production && npm run prepublish-html",
+        "compile": "webpack --mode development",
+        "watch": "webpack --mode development --watch",
+        "test": "jest --silent --config jest.config.js",
+        "install-html": "cd ./src/resultview/html && npm install",
+        "prepublish-html": "cd ./src/resultview/html && npm run prepublish",
+        "build-html": "cd ./src/resultview/html && npm run build",
+        "test-html": "cd ./src/resultview/html && npm run test",
+        "watch-html": "cd ./src/resultview/html && npm run watch",
+        "package": "vsce package"
     },
     "devDependencies": {
-        "@types/jest": "^23.3.1",
+        "@types/jest": "~25.2.0",
         "@types/node": "^7.0.43",
-        "jest": "^23.5.0",
-        "ts-jest": "^23.1.3",
-        "tslint": "^5.8.0",
-        "typescript": "^2.6.1",
-        "vscode": "^1.1.6"
+        "@types/sqlite3": "^3.1.4",
+        "@types/vscode": "1.30.0",
+        "jest": "~25.2.0",
+        "sqlite3": "~4.1.0",
+        "ts-jest": "~25.2.0",
+        "ts-loader": "^7.0.3",
+        "tslint": "~6.1.0",
+        "typescript": "~3.2.4",
+        "vsce": "^1.75.0",
+        "webpack": "^4.43.0",
+        "webpack-cli": "^3.3.11"
     },
     "dependencies": {
-        "@types/csv-stringify": "^1.4.2",
-        "command-exists": "^1.2.8",
-        "csv-stringify": "^3.1.1"
+        "csv-parser": "~2.3.0",
+        "csv-stringify": "~5.3.0"
     }
 }

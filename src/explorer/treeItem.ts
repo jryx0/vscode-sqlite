@@ -1,4 +1,4 @@
-import { TreeItem, TreeItemCollapsibleState, Command } from "vscode";
+import { TreeItem, TreeItemCollapsibleState, Command, ExtensionContext } from "vscode";
 import { join, basename } from "path";
 
 export interface SQLTree {
@@ -8,6 +8,7 @@ export interface SQLTree {
 export class SQLItem extends TreeItem {
 
     constructor(
+        public readonly name: string,
         public readonly label: string,
         public readonly collapsibleState: TreeItemCollapsibleState,
         public readonly command?: Command
@@ -18,16 +19,19 @@ export class SQLItem extends TreeItem {
 
 export class DBItem extends SQLItem {
     
-    constructor(public dbPath: string, command?: Command) {
+    constructor(context: ExtensionContext, public dbPath: string, command?: Command) {
         super(
+            dbPath,
             basename(dbPath),
             TreeItemCollapsibleState.Collapsed,
             command
         );
 
+        console.log(__filename);
+
         this.iconPath = {
-            light: join(__filename, '..', '..', '..', 'resources', 'light', 'database.svg'),
-            dark: join(__filename, '..', '..', '..', 'resources', 'dark', 'database.svg')
+            light: context.asAbsolutePath(join('resources', 'light', 'database.svg')),
+            dark: context.asAbsolutePath(join('resources', 'dark', 'database.svg'))
         };
 
         this.contextValue = 'sqlite.databaseItem';
@@ -40,27 +44,38 @@ export class DBItem extends SQLItem {
 
 export class TableItem extends SQLItem {
 
-    constructor(name: string, command?: Command) {
+    constructor(context: ExtensionContext, name: string, private type: string, command?: Command) {
         super(
+            name,
             name,
             TreeItemCollapsibleState.Collapsed,
             command
         );
         this.contextValue = 'sqlite.tableItem';
+        
+        let icon_name = "table.svg";
+        if (this.type === "view") {
+            icon_name = "table_view.svg";
+        }
+        this.iconPath = {
+            light: context.asAbsolutePath(join('resources', 'light', icon_name)),
+            dark: context.asAbsolutePath(join('resources', 'dark', icon_name))
+        };
     }
 
     get tooltip(): string {
         //var dbName = basename(dirname(this.id));
         //var dbNameNoExtension = dbName.substr(0, dbName.lastIndexOf('.')) || dbName;
-        return `${this.label}`;
+        return `${this.name}\n${this.type === "view"? "VIEW" : "TABLE"}`;
     }
 }
 
 export class ColumnItem extends SQLItem {
 
-    constructor(private name:string, private type: string,
+    constructor(context: ExtensionContext, name:string, private type: string,
             private notnull: boolean, private pk: number, private defVal: string, command?: Command) {
         super(
+            name,
             name+` : ${type.toLowerCase()}`,
             TreeItemCollapsibleState.None,
             command
@@ -72,8 +87,8 @@ export class ColumnItem extends SQLItem {
         iconName = pk > 0? 'col_pk.svg' : iconName;
 
         this.iconPath = {
-            light: join(__filename, '..', '..', '..', 'resources', 'light', iconName),
-            dark: join(__filename, '..', '..', '..', 'resources', 'dark', iconName)
+            light: context.asAbsolutePath(join('resources', 'light', iconName)),
+            dark: context.asAbsolutePath(join('resources', 'dark', iconName))
         };
     }
 

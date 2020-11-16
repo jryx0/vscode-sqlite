@@ -1,10 +1,14 @@
-import { TextDocument, window, workspace, ViewColumn, Selection } from "vscode";
+import { TextDocument, window, workspace, ViewColumn, Selection, Position } from "vscode";
 
 
-export function createSqlDocument(show?: boolean): Thenable<TextDocument> {
-    return workspace.openTextDocument({language: 'sql'}).then(sqlDocument => {
+export function createSqlDocument(content: string, cursorPos: Position, show?: boolean): Thenable<TextDocument> {
+    let sqliteDocContent = "-- SQLite\n" + content;
+    cursorPos = cursorPos.translate(1);
+    return workspace.openTextDocument({language: 'sqlite', content: sqliteDocContent}).then(sqlDocument => {
         if (show) {
-            window.showTextDocument(sqlDocument, ViewColumn.One);
+            window.showTextDocument(sqlDocument, ViewColumn.One).then(editor => {
+                editor.selection = new Selection(cursorPos, cursorPos);
+            });
         }
         return Promise.resolve(sqlDocument);
     });
@@ -13,7 +17,7 @@ export function createSqlDocument(show?: boolean): Thenable<TextDocument> {
 export function getEditorSqlDocument(): TextDocument | undefined {
     let editor = window.activeTextEditor;
     if (editor) {
-        return editor.document.languageId === 'sql'? editor.document : undefined;
+        return editor.document.languageId === 'sql' || editor.document.languageId === 'sqlite'? editor.document : undefined;
     } else {
         return undefined;
     }
@@ -21,6 +25,6 @@ export function getEditorSqlDocument(): TextDocument | undefined {
     
 export function getEditorSelection(): Selection | undefined {
     let selection = window.activeTextEditor? window.activeTextEditor.selection : undefined;
-    selection = selection && selection.isEmpty? undefined : selection;
+    // selection = selection && selection.isEmpty? undefined : selection;
     return selection;
 }

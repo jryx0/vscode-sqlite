@@ -1,0 +1,28 @@
+name: Publish
+
+on:
+  release:
+    types: [ published ]
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup Node.js 10.x
+      uses: actions/setup-node@v1
+      with:
+        node-version: 10.x
+    - name: Install vsce and ovsx
+      run: npm install --global vsce ovsx
+    - name: Install
+      run: |
+        npm install
+        npm run install-html
+    - name: Publish to Visual Studio Marketplace
+      env:
+        VSCE_PAT: ${{ secrets.VSCE_PAT }}
+      run: vsce publish
+    - name: Publish to Eclipse Open VSX
+      env:
+        OVSX_PAT: ${{ secrets.OVSX_PAT }}
+      run: ovsx publish

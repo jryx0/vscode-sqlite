@@ -9,10 +9,10 @@ export namespace QuickPick {
         detail?: string;
         picked?: boolean;
         
-        constructor(path: string) {
+        constructor(path: string, description?: string) {
             this.path = path;
             this.label = basename(path);
-            this.description = path;
+            this.description = description? description : path;
         }
     }
     export class FileDialogItem implements QuickPickItem {
@@ -22,7 +22,7 @@ export namespace QuickPick {
         picked?: boolean;
         
         constructor() {
-            this.label = "Choose another database";
+            this.label = "Choose database from file";
             this.description = "";
         }
     }
@@ -43,12 +43,15 @@ export namespace QuickPick {
  * Show a Quick Pick that lets you choose a database to open from all the files in the workspace with extension .db or .sqlite
  * @param hint What to write in the QuickPick
  */
-export function pickWorkspaceDatabase(autopick: boolean, hint?: string): Thenable<string> {
-    const sqlite_file_extensions = ["db", "db3", "sqlite", "sqlite3", "sdb", "s3db"];
+export function pickWorkspaceDatabase(autopick: boolean, fileExtensions: string[] = [], includeMemory: boolean = true, hint?: string): Thenable<string> {
+    if (fileExtensions == []) {
+        fileExtensions = ["db", "db3", "sqlite", "sqlite3", "sdb", "s3db"];
+    }
     const promise = new Promise< Array<QuickPick.DatabaseItem | QuickPick.ErrorItem | QuickPick.FileDialogItem> >((resolve) => {
-        workspace.findFiles('**/*.{'+sqlite_file_extensions.join(",")+'}').then((filesUri) => {
+        workspace.findFiles('**/*.{'+fileExtensions.join(",")+'}').then((filesUri) => {
             let fileDialogItem = new QuickPick.FileDialogItem();
             let items: Array<QuickPick.DatabaseItem | QuickPick.ErrorItem | QuickPick.FileDialogItem> = filesUri.map(uri => new QuickPick.DatabaseItem(uri.fsPath));
+            if (includeMemory) items.push(new QuickPick.DatabaseItem(":memory:", "sqlite in-memory database"));
             items.push(fileDialogItem);
             resolve(items);
         });
@@ -60,7 +63,7 @@ export function pickWorkspaceDatabase(autopick: boolean, hint?: string): Thenabl
                 if (item instanceof QuickPick.DatabaseItem) {
                     resolve(item.path);
                 } else if (item instanceof QuickPick.FileDialogItem) {
-                    window.showOpenDialog({filters: {"Database": sqlite_file_extensions}}).then(fileUri => {
+                    window.showOpenDialog({filters: {"Database": fileExtensions}}).then(fileUri => {
                         if (fileUri) {
                             resolve(fileUri[0].fsPath);
                         } else {

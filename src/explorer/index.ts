@@ -1,8 +1,8 @@
-import { Disposable, commands, window } from "vscode";
+import { Disposable, commands, window, ExtensionContext } from "vscode";
 import { ExplorerTreeProvider } from "./explorerTreeProvider";
 import * as treeItem from "./treeItem";
 import { Constants } from "../constants/constants";
-import { Schema } from "../interfaces";
+import { Schema } from "../common";
 
 class Explorer implements Disposable {
 
@@ -10,10 +10,10 @@ class Explorer implements Disposable {
 
     private explorerTreeProvider: ExplorerTreeProvider;
 
-    constructor() {
+    constructor(context: ExtensionContext) {
         let subscriptions = [];
 
-        this.explorerTreeProvider = new ExplorerTreeProvider();
+        this.explorerTreeProvider = new ExplorerTreeProvider(context);
         subscriptions.push(window.createTreeView(Constants.sqliteExplorerViewId, { treeDataProvider: this.explorerTreeProvider }));
 
         this.disposable = Disposable.from(...subscriptions);

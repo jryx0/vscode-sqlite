@@ -1,16 +1,18 @@
 
 /**
- * Sanitizes a string for html, that is:
- * '&' is replaced by '&amp'
- * '/' is replaced by '&#x2F;'
- * '<' and '>' are replaced by '&lt;' and '&gt;'
- * @param s string to sanitize
+ * Sanitizes a string for html
  */
-export function sanitizeStringForHtml(s: string): string {
-    s = s.replace(/&/g, '&amp;');
-    s = s.replace('/', '&#x2F;');
-    s = s.replace(/<(\w+)>/g, '&lt;$1&gt;');
-    return s;
+export function sanitizeStringForHtml(str: string): string {
+    let map: {[char: string]: string} = {
+        '&': "&amp;",
+        '<': "&lt;",
+        '>': "&gt;",
+        '/': "&#x2F;",
+        '"': "&quot;",
+        '\'': "&#039;"
+    };
+    
+    return str.replace(/[&<>\/"']/g, m => map[m]);
 }
 
 export function replaceEscapedOctetsWithChar(s: string) {
@@ -108,8 +110,16 @@ export function splitNotInString(char: string, str: string) {
     return substrs;
 }
 
-export function randomString(length: number) {
-    return Math.round((Math.pow(36, length + 1) - Math.random() * Math.pow(36, length))).toString(36).slice(1);
+export function randomString(length: number, extended: boolean = false) {
+    let text = "";
+    let possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    if (extended) possible += "èé+*][ò@à#°ù§-_!£$%&/()=<>^ì?";
+
+    for (var i = 0; i < length; i++) {
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+    }
+
+    return text;
 }
 
 export function queryObject(obj: Object, query: string): Object | undefined {
@@ -124,4 +134,12 @@ export function queryObject(obj: Object, query: string): Object | undefined {
         }
     }
     return ret;
+}
+
+export function uniqueBy<T>(arr: T[], prop: string): T[] {
+    var seen: {[key: string]: boolean} = {};
+    return arr.filter((item) => {
+        let k = (item as any)[prop];
+        return k && seen.hasOwnProperty(k) ? false : (seen[k] = true);
+    });
 }

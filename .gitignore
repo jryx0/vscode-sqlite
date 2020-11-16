@@ -1,5 +1,8 @@
-out
-node_modules
-.vscode-test/
-.test_db/
+.vscode/extensions.json
+.vscode/settings.json
+dist/
+out/
+node_modules/
+.data/
 *.vsix
+*.db

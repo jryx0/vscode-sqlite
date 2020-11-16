@@ -1,48 +1,27 @@
-import {execute} from "./sqlite3";
 import { Schema } from "./schema";
-import { Disposable, window } from "vscode";
-import { SQLParser } from "./sqlparser";
-import { logger } from "../logging/logger";
-import { ResultSet } from "../interfaces";
-
-const sqlite3ErrorMessage = "Unable to execute sqlite3 queries, change the sqlite.sqlite3 setting to fix this issue.";
+import { Disposable } from "vscode";
+import { ResultSet } from "../common";
+import { executeQuery } from "./queryExecutor";
 
 class SQLite implements Disposable {
-    private activated = false;
-    
-    constructor(private sqlite3: string) {
-        if (sqlite3) this.activated = true;
-        else window.showErrorMessage(sqlite3ErrorMessage);
+
+    constructor(_extensionPath: string) {
     }
 
-    query(dbPath: string, query: string): Promise<QueryResult> {
-        if (!this.activated) {
-            window.showErrorMessage(sqlite3ErrorMessage);
-            return Promise.reject(sqlite3ErrorMessage);
-        }
+    query(sqliteCommand: string, dbPath: string, query: string): Promise<QueryResult> {
+        if (!sqliteCommand) Promise.resolve({error: "Unable to execute query: provide a valid sqlite3 executable in the setting sqlite.sqlite3."});
 
-        query = SQLParser.parse(query).join('');
-        
-        logger.info(`[QUERY] ${query}`);
-
-        return new Promise( resolve => {
-            execute(this.sqlite3, dbPath, query, (resultSet, error) => {
-                resolve({resultSet: resultSet, error: error} as QueryResult);
-            });
-        });
+        return executeQuery(sqliteCommand, dbPath, query);
     }
     
-    schema(dbPath: string) {
-        if (!this.activated) {
-            window.showErrorMessage(sqlite3ErrorMessage);
-            return Promise.reject(sqlite3ErrorMessage);
-        }
+    schema(sqliteCommand: string, dbPath: string): Promise<Schema.Database> {
+        if (!sqliteCommand) Promise.resolve({error: "Unable to execute query: provide a valid sqlite3 executable in the setting sqlite.sqlite3."});
 
-        return Schema.build(dbPath, this.sqlite3);
+        return Promise.resolve(Schema.build(dbPath, sqliteCommand));
     }
     
     dispose() {
-        // Nothing for now
+        // Nothing to dispose
     }
 }
 

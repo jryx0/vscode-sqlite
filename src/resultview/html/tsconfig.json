@@ -1,0 +1,24 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "es6",
+        "outDir": "dist",
+        "rootDir": "src",
+        "lib": [
+            "dom", "es6"
+        ],
+        "sourceMap": true,
+        "strict": true,
+        /* Additional Checks */
+        "noUnusedLocals": true,
+        "noImplicitAny": true,
+        "jsx": "react"
+    },
+    "include": [
+        "typings",
+        "src"
+    ],
+    "exclude": [
+        "node_modules"
+    ]
+}
